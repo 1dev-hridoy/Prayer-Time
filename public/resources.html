@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ইসলামিক রিসোর্স - কুরআন অ্যাপ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        .resource-card {
+            transition: all 0.3s ease;
+        }
+
+        .resource-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .prayer-time {
+            transition: all 0.3s ease;
+        }
+
+        .qibla-compass {
+            transition: transform 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="flex justify-between items-center px-4 py-3 bg-white border-b sticky top-0 z-50 h-[60px]">
+        <div class="flex items-center space-x-4">
+            <a href="/" class="p-2 hover:bg-gray-100 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl">ইসলামিক রিসোর্স</h1>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Quick Links -->
+        <section class="mb-8">
+            <h2 class="text-2xl mb-4">দ্রুত লিংক</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <a href="/surah" class="resource-card bg-white p-6 rounded-lg shadow-sm hover:shadow-md">
+                    <h3 class="text-lg font-medium mb-2">সূরা সমূহ</h3>
+                    <p class="text-gray-600">সমস্ত সূরার তালিকা এবং তাফসীর</p>
+                </a>
+                <a href="/tasbeeh" class="resource-card bg-white p-6 rounded-lg shadow-sm hover:shadow-md">
+                    <h3 class="text-lg font-medium mb-2">তাসবীহ কাউন্টার</h3>
+                    <p class="text-gray-600">ডিজিটাল তাসবীহ গণনা করুন</p>
+                </a>
+                <div class="resource-card bg-white p-6 rounded-lg shadow-sm hover:shadow-md cursor-pointer" onclick="showQiblaDirection()">
+                    <h3 class="text-lg font-medium mb-2">কিবলা দিক নির্দেশনা</h3>
+                    <p class="text-gray-600">আপনার অবস্থান থেকে কিবলার দিক</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Duas -->
+        <section class="mb-8">
+            <h2 class="text-2xl mb-4">দৈনিক দোয়া সমূহ</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-medium mb-2">ঘুমানোর আগের দোয়া</h3>
+                    <p class="text-gray-600 mb-2">بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا</p>
+                    <p class="text-sm text-gray-500">উচ্চারণঃ বিসমিকা আল্লাহুম্মা আমুতু ওয়া আহইয়া</p>
+                    <p class="text-sm text-gray-500">অর্থঃ হে আল্লাহ, তোমার নামে আমি মৃত্যুবরণ করি এবং জীবন লাভ করি</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-sm">
+                    <h3 class="text-lg font-medium mb-2">ঘুম থেকে উঠার দোয়া</h3>
+                    <p class="text-gray-600 mb-2">الْحَمْدُ لِلَّهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ</p>
+                    <p class="text-sm text-gray-500">উচ্চারণঃ আলহামদু লিল্লাহিল্লাযী আহইয়ানা বা'দা মা আমাতানা ওয়া ইলাইহিন নুশুর</p>
+                    <p class="text-sm text-gray-500">অর্থঃ সকল প্রশংসা আল্লাহর জন্য, যিনি আমাদেরকে মৃত্যুর পর জীবন দান করেছেন এবং তাঁর কাছেই প্রত্যাবর্তন</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Islamic Calendar -->
+        <section class="mb-8">
+            <h2 class="text-2xl mb-4">ইসলামি ক্যালেন্ডার</h2>
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <div id="hijriDate" class="text-lg"></div>
+                <div id="importantDates" class="mt-4 space-y-2"></div>
+            </div>
+        </section>
+
+        <!-- Qibla Modal -->
+        <div id="qiblaModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[9999]">
+            <div class="bg-white rounded-lg p-6 max-w-md mx-4 w-full">
+                <div class="flex justify-between items-start mb-4">
+                    <h3 class="text-xl font-medium">কিবলা দিক নির্দেশনা</h3>
+                    <button onclick="closeQiblaModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="text-center">
+                    <div id="qiblaCompass" class="qibla-compass w-48 h-48 mx-auto mb-4">
+                        <svg viewBox="0 0 100 100" class="w-full h-full">
+                            <circle cx="50" cy="50" r="45" fill="none" stroke="#4B5563" stroke-width="2"/>
+                            <polygon points="50,10 45,45 50,40 55,45" fill="#DC2626"/>
+                            <text x="50" y="25" text-anchor="middle" fill="#4B5563">N</text>
+                            <text x="75" y="50" text-anchor="middle" fill="#4B5563">E</text>
+                            <text x="50" y="75" text-anchor="middle" fill="#4B5563">S</text>
+                            <text x="25" y="50" text-anchor="middle" fill="#4B5563">W</text>
+                        </svg>
+                    </div>
+                    <p id="qiblaInfo" class="text-gray-600"></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Hijri Calendar
+        async function getHijriDate() {
+            try {
+                const today = new Date();
+                // Format date as DD-MM-YYYY
+                const formattedDate = [
+                    today.getDate().toString().padStart(2, '0'),
+                    (today.getMonth() + 1).toString().padStart(2, '0'),
+                    today.getFullYear()
+                ].join('-');
+                    
+                const response = await fetch(`/api/calendar/gregorian/${formattedDate}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch Hijri date');
+                }
+                const data = await response.json();
+                
+                if (data && data.data && data.data.hijri) {
+                    const hijri = data.data.hijri;
+                    document.getElementById('hijriDate').textContent = 
+                        `${hijri.day} ${hijri.month.ar} ${hijri.year} হিজরি`;
+                } else {
+                    throw new Error('Invalid response format');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('hijriDate').textContent = 'তারিখ লোড করা যায়নি';
+            }
+        }
+
+        // Qibla Direction
+        async function showQiblaDirection() {
+            document.getElementById('qiblaModal').classList.remove('hidden');
+            document.getElementById('qiblaModal').classList.add('flex');
+            
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(async position => {
+                    try {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        const response = await fetch(`/api/qibla/${lat}/${lng}`);
+                        if (!response.ok) throw new Error('Failed to fetch Qibla direction');
+                        const data = await response.json();
+                        
+                        const qiblaDegrees = data.data.direction;
+                        document.getElementById('qiblaCompass').style.transform = 
+                            `rotate(${qiblaDegrees}deg)`;
+                        document.getElementById('qiblaInfo').textContent = 
+                            `কিবলার দিক: ${Math.round(qiblaDegrees)}°`;
+                    } catch (error) {
+                        console.error('Error:', error);
+                        document.getElementById('qiblaInfo').textContent = 
+                            'কিবলার দিক খুঁজে পাওয়া যায়নি';
+                    }
+                });
+            } else {
+                document.getElementById('qiblaInfo').textContent = 
+                    'লোকেশন সার্ভিস চালু করুন';
+            }
+        }
+
+        function closeQiblaModal() {
+            document.getElementById('qiblaModal').classList.add('hidden');
+            document.getElementById('qiblaModal').classList.remove('flex');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            getHijriDate();
+            // Add error handling for the WebSocket connection
+            window.addEventListener('error', (event) => {
+                if (event.message.includes('WebSocket')) {
+                    console.log('WebSocket connection failed, but application continues to work');
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

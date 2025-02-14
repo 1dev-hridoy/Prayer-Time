@@ -109,12 +109,19 @@
                 </a>
                 <h1 class="text-xl">সূরা সমূহ</h1>
             </div>
+           
             <div class="flex items-center space-x-2">
-                <button class="p-2 hover:bg-gray-100 rounded-lg">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="সূরা খুঁজুন..."
+                        class="w-64 px-4 py-2 pl-10 pr-4 rounded-lg border focus:outline-none focus:border-blue-500"
+                    >
+                    <svg class="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
-                </button>
+                </div>
             </div>
         </header>
 
@@ -127,10 +134,42 @@
     </div>
 
     <script>
+        let allSurahs = [];
+        let filteredSurahs = [];
         let page = 1;
         const itemsPerPage = 20;
         let loading = false;
-        let allSurahs = [];
+
+        // Add search functionality
+        const searchInput = document.getElementById('searchInput');
+        
+        searchInput.addEventListener('input', debounce(() => {
+            const searchTerm = searchInput.value.toLowerCase();
+            
+            filteredSurahs = allSurahs.filter(surah => 
+                surah.name_simple.toLowerCase().includes(searchTerm) ||
+                surah.name_arabic.includes(searchTerm) ||
+                surah.translated_name.name.toLowerCase().includes(searchTerm) ||
+                surah.id.toString().includes(searchTerm)
+            );
+            
+            page = 1;
+            document.getElementById('surahList').innerHTML = ''; // Clear existing surahs
+            displaySurahs();
+        }, 300));
+
+        // Debounce function to prevent too many searches while typing
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
         async function loadSurahs() {
             try {
@@ -141,6 +180,7 @@
                 }
                 const data = await response.json();
                 allSurahs = data.chapters;
+                filteredSurahs = [...allSurahs]; // Initialize filtered surahs with all surahs
                 displaySurahs();
             } catch (error) {
                 console.error('Error loading surahs:', error);
@@ -154,11 +194,15 @@
             const surahList = document.getElementById('surahList');
             const start = (page - 1) * itemsPerPage;
             const end = start + itemsPerPage;
-            const surahs = allSurahs.slice(start, end);
+            const surahs = filteredSurahs.slice(start, end);
+
+            if (page === 1) {
+                surahList.innerHTML = ''; // Clear only on first page
+            }
 
             surahs.forEach(surah => {
                 const card = document.createElement('div');
-                card.className = 'surah-card rounded-lg p-6 shadow-sm cursor-pointer';
+                card.className = 'surah-card bg-white rounded-lg p-6 shadow-sm cursor-pointer hover:shadow-md transition-shadow';
                 card.onclick = () => showSurahInfo(surah.id);
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
@@ -205,12 +249,12 @@
             document.getElementById('surahModal').classList.add('hidden');
         }
 
-        // Infinite scroll
+        // Update infinite scroll
         window.addEventListener('scroll', () => {
             if (loading) return;
             
             if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
-                if ((page * itemsPerPage) < allSurahs.length) {
+                if ((page * itemsPerPage) < filteredSurahs.length) {
                     loading = true;
                     page++;
                     displaySurahs();

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>তাসবীহ - কুরআন অ্যাপ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+        }
+
+        .counter-ring {
+            transition: transform 0.3s ease;
+        }
+
+        .counter-ring:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 0.3s ease-in-out;
+        }
+
+        .dhikr-card {
+            transition: all 0.3s ease;
+        }
+
+        .dhikr-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .dhikr-card.selected {
+            border-color: #3B82F6;
+            background-color: #EFF6FF;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="flex justify-between items-center px-4 py-3 bg-white border-b sticky top-0 z-50 h-[60px]">
+        <div class="flex items-center space-x-4">
+            <a href="/" class="p-2 hover:bg-gray-100 rounded-lg">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </a>
+            <h1 class="text-xl">তাসবীহ</h1>
+        </div>
+        <button onclick="resetAll()" class="p-2 hover:bg-gray-100 rounded-lg text-red-500">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+        </button>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- Dhikr Selection -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            <div class="dhikr-card p-4 border rounded-lg cursor-pointer selected" onclick="selectDhikr(this, 'সুবহান আল্লাহ', 33)">
+                <h3 class="text-lg font-medium mb-2">সুবহান আল্লাহ</h3>
+                <p class="text-sm text-gray-600">৩৩ বার</p>
+            </div>
+            <div class="dhikr-card p-4 border rounded-lg cursor-pointer" onclick="selectDhikr(this, 'আলহামদুলিল্লাহ', 33)">
+                <h3 class="text-lg font-medium mb-2">আলহামদুলিল্লাহ</h3>
+                <p class="text-sm text-gray-600">৩৩ বার</p>
+            </div>
+            <div class="dhikr-card p-4 border rounded-lg cursor-pointer" onclick="selectDhikr(this, 'আল্লাহু আকবার', 34)">
+                <h3 class="text-lg font-medium mb-2">আল্লাহু আকবার</h3>
+                <p class="text-sm text-gray-600">৩৪ বার</p>
+            </div>
+            <div class="dhikr-card p-4 border rounded-lg cursor-pointer" onclick="selectDhikr(this, 'লা ইলাহা ইল্লাল্লাহ', 100)">
+                <h3 class="text-lg font-medium mb-2">লা ইলাহা ইল্লাল্লাহ</h3>
+                <p class="text-sm text-gray-600">১০০ বার</p>
+            </div>
+            <div class="dhikr-card p-4 border rounded-lg cursor-pointer" onclick="selectDhikr(this, 'আস্তাগফিরুল্লাহ', 100)">
+                <h3 class="text-lg font-medium mb-2">আস্তাগফিরুল্লাহ</h3>
+                <p class="text-sm text-gray-600">১০০ বার</p>
+            </div>
+        </div>
+
+        <!-- Counter Display -->
+        <div class="flex flex-col items-center justify-center space-y-6">
+            <div class="text-center">
+                <h2 id="currentDhikr" class="text-2xl mb-2">সুবহান আল্লাহ</h2>
+                <div class="flex items-center justify-center space-x-2">
+                    <span id="counter" class="text-4xl font-bold">০</span>
+                    <span id="target" class="text-gray-500">/৩৩</span>
+                </div>
+            </div>
+
+            <!-- Counter Button -->
+            <div class="counter-ring w-48 h-48 rounded-full bg-blue-500 hover:bg-blue-600 
+                        flex items-center justify-center cursor-pointer shadow-lg
+                        active:shadow-md" onclick="increment()">
+                <span class="text-white text-6xl">+</span>
+            </div>
+
+            <!-- Reset Button -->
+            <button onclick="reset()" class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
+                রিসেট
+            </button>
+        </div>
+    </main>
+
+    <script>
+        let count = 0;
+        let target = 33;
+        let currentDhikr = 'সুবহান আল্লাহ';
+        const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+
+        function toBengaliNumber(num) {
+            return num.toString().split('').map(d => bengaliNumerals[d]).join('');
+        }
+
+        function selectDhikr(element, dhikr, newTarget) {
+            // Remove selected class from all cards
+            document.querySelectorAll('.dhikr-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked card
+            element.classList.add('selected');
+            
+            currentDhikr = dhikr;
+            target = newTarget;
+            count = 0;
+            updateDisplay();
+            
+            // Update UI
+            document.getElementById('currentDhikr').textContent = dhikr;
+            document.getElementById('target').textContent = `/${toBengaliNumber(target)}`;
+        }
+
+        function increment() {
+            if (count < target) {
+                count++;
+                updateDisplay();
+                
+                // Add pulse animation
+                const ring = document.querySelector('.counter-ring');
+                ring.classList.add('pulse');
+                setTimeout(() => ring.classList.remove('pulse'), 300);
+
+                // Vibrate if available
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(20);
+                }
+
+                // Check if target reached
+                if (count === target) {
+                    // Longer vibration on completion
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate([100, 50, 100]);
+                    }
+                }
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('counter').textContent = toBengaliNumber(count);
+        }
+
+        function reset() {
+            count = 0;
+            updateDisplay();
+        }
+
+        function resetAll() {
+            count = 0;
+            target = 33;
+            currentDhikr = 'সুবহান আল্লাহ';
+            
+            // Reset selected dhikr
+            document.querySelectorAll('.dhikr-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector('.dhikr-card').classList.add('selected');
+            
+            // Update UI
+            document.getElementById('currentDhikr').textContent = currentDhikr;
+            document.getElementById('target').textContent = `/${toBengaliNumber(target)}`;
+            updateDisplay();
+        }
+
+        // Enable keyboard controls
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                increment();
+                e.preventDefault(); // Prevent page scroll
+            } else if (e.code === 'KeyR') {
+                reset();
+            }
+        });
+
+        // Save state to localStorage
+        window.addEventListener('beforeunload', () => {
+            localStorage.setItem('tasbeehState', JSON.stringify({
+                count,
+                target,
+                currentDhikr
+            }));
+        });
+
+        // Load state from localStorage
+        window.addEventListener('load', () => {
+            const savedState = localStorage.getItem('tasbeehState');
+            if (savedState) {
+                const { count: savedCount, target: savedTarget, currentDhikr: savedDhikr } = JSON.parse(savedState);
+                count = savedCount;
+                target = savedTarget;
+                currentDhikr = savedDhikr;
+                
+                // Update UI
+                document.getElementById('currentDhikr').textContent = currentDhikr;
+                document.getElementById('target').textContent = `/${toBengaliNumber(target)}`;
+                updateDisplay();
+                
+                // Update selected dhikr card
+                document.querySelectorAll('.dhikr-card').forEach(card => {
+                    if (card.querySelector('h3').textContent === currentDhikr) {
+                        card.classList.add('selected');
+                    } else {
+                        card.classList.remove('selected');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 

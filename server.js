@@ -122,6 +122,155 @@ app.get('/api/chapters/:id/info', async (req, res) => {
     }
 });
 
+// Add this route with your other routes
+app.get('/tasbeeh', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/tasbeeh.html'));
+});
+
+// Add this route with your other routes
+app.get('/resources', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/resources.html'));
+});
+
+// Add these new API endpoints after your existing endpoints
+
+// Prayer Times by City
+app.get('/api/prayer-times/:city/:country', async (req, res) => {
+    try {
+        const { city, country } = req.params;
+        const today = moment().tz('Asia/Dhaka').format('DD-MM-YYYY');
+        
+        const response = await fetch(
+            `https://api.aladhan.com/v1/timingsByCity/${today}?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=2`
+        );
+        
+        if (!response.ok) throw new Error('Prayer times service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Prayer Times by Coordinates
+app.get('/api/prayer-times/coordinates/:latitude/:longitude', async (req, res) => {
+    try {
+        const { latitude, longitude } = req.params;
+        const today = moment().tz('Asia/Dhaka').format('DD-MM-YYYY');
+        
+        const response = await fetch(
+            `https://api.aladhan.com/v1/timings/${today}?latitude=${latitude}&longitude=${longitude}&method=2`
+        );
+        
+        if (!response.ok) throw new Error('Prayer times service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Hijri Calendar Conversion (Gregorian to Hijri)
+app.get('/api/calendar/gregorian/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        // Parse the date in the correct format (DD-MM-YYYY)
+        const momentDate = moment(date, 'DD-MM-YYYY', true);
+        
+        if (!momentDate.isValid()) {
+            throw new Error('Invalid date format. Please use DD-MM-YYYY');
+        }
+        
+        const formattedDate = momentDate.format('DD-MM-YYYY');
+        const response = await fetch(`http://api.aladhan.com/v1/gToH?date=${formattedDate}`);
+        
+        if (!response.ok) throw new Error('Calendar service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ 
+            error: 'Failed to fetch Hijri date',
+            message: error.message 
+        });
+    }
+});
+
+// Hijri Calendar Conversion (Hijri to Gregorian)
+app.get('/api/calendar/hijri/:date', async (req, res) => {
+    try {
+        const { date } = req.params;
+        const response = await fetch(`http://api.aladhan.com/v1/hToG?date=${date}`);
+        
+        if (!response.ok) throw new Error('Calendar service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Ramadan Calendar
+app.get('/api/ramadan-calendar/:year', async (req, res) => {
+    try {
+        const { year } = req.params;
+        const response = await fetch(`http://api.aladhan.com/v1/hijriCalendarByYear/${year}?annual=false&month=9`);
+        
+        if (!response.ok) throw new Error('Ramadan calendar service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Ramadan Prayer Times
+app.get('/api/ramadan-prayer-times/:year/:city/:country', async (req, res) => {
+    try {
+        const { year, city, country } = req.params;
+        const response = await fetch(
+            `http://api.aladhan.com/v1/hijriCalendarByCity/${year}?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&annual=false&month=9`
+        );
+        
+        if (!response.ok) throw new Error('Ramadan prayer times service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Qibla Direction
+app.get('/api/qibla/:latitude/:longitude', async (req, res) => {
+    try {
+        const { latitude, longitude } = req.params;
+        const response = await fetch(
+            `http://api.aladhan.com/v1/qibla/${latitude}/${longitude}`
+        );
+        
+        if (!response.ok) throw new Error('Qibla direction service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Islamic Calendar for a specific month
+app.get('/api/hijri-calendar/:year/:month', async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        const response = await fetch(
+            `http://api.aladhan.com/v1/hijriCalendar/${year}/${month}`
+        );
+        
+        if (!response.ok) throw new Error('Islamic calendar service unavailable');
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Handle 404 errors
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
