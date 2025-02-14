@@ -1,0 +1,19 @@
+{
+  "name": "namj",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.18.2",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.47",
+    "node-fetch": "^2.7.0"
+  }
+}

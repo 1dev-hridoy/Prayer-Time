@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>কুরআন অ্যাপ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+            font-weight: 300;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            background: #FFF;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        .loader::after {
+            content: '';  
+            box-sizing: border-box;
+            position: absolute;
+            left: 6px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            color: #FF3D00;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow: 25px 2px, 10px 22px;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .prayer-card {
+            background: #B8B8B8;
+            transition: transform 0.3s ease;
+            min-height: 120px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .prayer-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1;
+        }
+
+        .prayer-card h3,
+        .prayer-card p {
+            position: relative;
+            z-index: 2;
+        }
+
+        .prayer-time {
+            margin-top: 1.5rem;
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
+        #sidebar {
+            height: calc(100vh - 60px);
+            top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .prayer-cards-grid {
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .prayer-cards-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Add loading overlay -->
+    <div id="loadingOverlay" class="loading-container">
+        <span class="loader"></span>
+    </div>
+
+    <!-- Add this right after the loading overlay -->
+    <div id="errorModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+        <div class="bg-white rounded-lg p-6 max-w-sm mx-4 w-full">
+            <div class="flex flex-col items-center">
+                <div class="mb-4 text-red-500">
+                    <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <h3 class="mb-4 text-xl font-medium text-gray-900">ত্রুটি!</h3>
+                <p id="errorMessage" class="mb-6 text-center text-gray-500">ডেটা লোড করতে সমস্যা হচ্ছে</p>
+                <button onclick="retryLoading()" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                    আবার চেষ্টা করুন
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile menu -->
+    <div id="overlay" class="fixed inset-0 bg-black opacity-50 z-30 hidden"></div>
+
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="flex justify-between items-center px-4 py-3 bg-white border-b sticky top-0 z-50 h-[60px]">
+            <div class="flex items-center space-x-4">
+                <button id="sidebarToggle" class="p-2 hover:bg-gray-100 rounded-lg lg:hidden">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <h1 class="text-xl">কুরআন অ্যাপ</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+                <button class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="lg:flex">
+            <!-- Sidebar -->
+            <aside id="sidebar" class="fixed inset-y-[60px] left-0 w-64 transform -translate-x-full lg:translate-x-0 bg-white border-r transition-transform duration-300 ease-in-out z-40">
+                <div class="p-4 space-y-6">
+                    <div class="space-y-2">
+                        <h2 class="text-sm text-gray-500 px-4">দ্রুত লিঙ্ক</h2>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">সূরা সমূহ</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">পারা সমূহ</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">বুকমার্ক</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">সাম্প্রতিক</a>
+                    </div>
+                    <div class="space-y-2">
+                        <h2 class="text-sm text-gray-500 px-4">সেটিংস</h2>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">থিম</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">ভাষা</a>
+                        <a href="#" class="block px-4 py-2 hover:bg-gray-100 rounded-lg">নোটিফিকেশন</a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-4 lg:ml-64">
+                <h2 class="text-xl mb-4">নামাজের সময়সূচী</h2>
+                <div class="prayer-cards-grid mb-6">
+                    <div class="prayer-card rounded-xl p-6 text-white bg-cover bg-center" style="background-image: url('../assets/Fajr.jpg')">
+                        <h3 class="text-lg">ফজর</h3>
+                        <p class="prayer-time">০৫:২৩</p>
+                    </div>
+                    <div class="prayer-card rounded-xl p-6 text-white bg-cover bg-center" style="background-image: url('../assets/Dhuhr.jpg')">
+                        <h3 class="text-lg">যোহর</h3>
+                        <p class="prayer-time">১২:৩০</p>
+                    </div>
+                    <div class="prayer-card rounded-xl p-6 text-white bg-cover bg-center" style="background-image: url('../assets/Asr.jpg')">
+                        <h3 class="text-lg">আসর</h3>
+                        <p class="prayer-time">০৩:৪৫</p>
+                    </div>
+                    <div class="prayer-card rounded-xl p-6 text-white bg-cover bg-center" style="background-image: url('../assets/Maghrib.jpg')">
+                        <h3 class="text-lg">মাগরিব</h3>
+                        <p class="prayer-time">০৬:২৫</p>
+                    </div>
+                    <div class="prayer-card rounded-xl p-6 text-white bg-cover bg-center" style="background-image: url('../assets/Esha.jpg')">
+                        <h3 class="text-lg">ইশা</h3>
+                        <p class="prayer-time">০৭:৫৫</p>
+                    </div>
+                </div>
+
+                <!-- Date Information -->
+                <div class="bg-white rounded-xl p-6 shadow-sm">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Hijri Date -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">হিজরি তারিখ</h3>
+                            <div class="space-y-2">
+                                <p class="date-hijri"></p>
+                                <p class="weekday-hijri"></p>
+                                <p class="month-hijri"></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Gregorian Date -->
+                        <div>
+                            <h3 class="text-lg font-medium mb-4">ইংরেজি তারিখ</h3>
+                            <div class="space-y-2">
+                                <p class="date-gregorian"></p>
+                                <p class="weekday-gregorian"></p>
+                            </div>
+                        </div>
+                        
+                        <!-- Location Info -->
+                        <div class="md:col-span-2">
+                            <h3 class="text-lg font-medium mb-4">অবস্থান তথ্য</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p class="timezone"></p>
+                                    <p class="coordinates"></p>
+                                </div>
+                                <div>
+                                    <p class="calculation-method"></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        function showError(message) {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorModal').classList.remove('hidden');
+        }
+
+        function hideError() {
+            document.getElementById('errorModal').classList.add('hidden');
+        }
+
+        function retryLoading() {
+            hideError();
+            updatePrayerTimes();
+        }
+
+        async function updatePrayerTimes() {
+            try {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                hideError();
+                
+                const response = await fetch('/api/prayer-times');
+                if (!response.ok) {
+                    throw new Error('সার্ভার থেকে ডেটা লোড করতে সমস্যা হচ্ছে');
+                }
+                
+                const data = await response.json();
+                
+                // Update prayer times
+                document.querySelector('.prayer-card:nth-child(1) .prayer-time').textContent = data.timings.Fajr;
+                document.querySelector('.prayer-card:nth-child(2) .prayer-time').textContent = data.timings.Dhuhr;
+                document.querySelector('.prayer-card:nth-child(3) .prayer-time').textContent = data.timings.Asr;
+                document.querySelector('.prayer-card:nth-child(4) .prayer-time').textContent = data.timings.Maghrib;
+                document.querySelector('.prayer-card:nth-child(5) .prayer-time').textContent = data.timings.Isha;
+                
+                // Update date information
+                document.querySelector('.date-hijri').textContent = `তারিখ: ${data.date.hijri.day} ${data.date.hijri.month.en} ${data.date.hijri.year}`;
+                document.querySelector('.weekday-hijri').textContent = `বার: ${data.date.hijri.weekday.en}`;
+                document.querySelector('.month-hijri').textContent = `মাস: ${data.date.hijri.month.en} (${data.date.hijri.month.ar})`;
+                
+                document.querySelector('.date-gregorian').textContent = `তারিখ: ${data.date.gregorian.date}`;
+                document.querySelector('.weekday-gregorian').textContent = `বার: ${data.date.gregorian.weekday.en}`;
+                
+                document.querySelector('.timezone').textContent = `টাইম জোন: ${data.meta.timezone}`;
+                document.querySelector('.coordinates').textContent = `অবস্থান: ${data.meta.latitude}, ${data.meta.longitude}`;
+                document.querySelector('.calculation-method').textContent = `ক্যালকুলেশন মেথড: ${data.meta.method.name}`;
+                
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            } catch (error) {
+                console.error('Error fetching prayer times:', error);
+                showError('ডেটা লোড করতে সমস্যা হচ্ছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            }
+        }
+
+        // Call updatePrayerTimes when the page loads
+        document.addEventListener('DOMContentLoaded', updatePrayerTimes);
+
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+
+        function openSidebar() {
+            sidebar.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        sidebarToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (sidebar.classList.contains('-translate-x-full')) {
+                openSidebar();
+            } else {
+                closeSidebar();
+            }
+        });
+
+        overlay.addEventListener('click', closeSidebar);
+
+        // Handle resize events
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 1024) {
+                closeSidebar();
+                sidebar.classList.remove('-translate-x-full');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+            }
+        });
+    </script>
+</body>
+</html>
