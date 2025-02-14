@@ -7,27 +7,34 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 // Serve static files from public directory
-app.use(express.static('public', {
-    extensions: ['html'], // This will automatically serve .html files without the extension
-}));
+app.use(express.static('public'));
 app.use('/assets', express.static('assets'));
 
-// Redirect /pagename.html to /pagename
-app.use((req, res, next) => {
-    if (req.path.endsWith('.html')) {
-        const withoutHtml = req.path.slice(0, -5); // Remove .html
-        return res.redirect(301, withoutHtml);
-    }
-    next();
-});
-
-// Route handlers
+// Define routes before static file handling
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 
 app.get('/surah', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/surah.html'));
+});
+
+app.get('/resources', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/resources.html'));
+});
+
+app.get('/guide', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/guide.html'));
+});
+
+app.get('/tasbeeh', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/tasbeeh.html'));
+});
+
+// Redirect .html URLs to clean URLs
+app.get('/*.html', (req, res) => {
+    const withoutHtml = req.path.slice(0, -5); // Remove .html
+    res.redirect(301, withoutHtml);
 });
 
 // API endpoints
@@ -121,23 +128,6 @@ app.get('/api/chapters/:id/info', async (req, res) => {
         });
     }
 });
-
-// Add this route with your other routes
-app.get('/tasbeeh', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/tasbeeh.html'));
-});
-
-// Add this route with your other routes
-app.get('/resources', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/resources.html'));
-});
-
-// Add this route with your other routes
-app.get('/guide', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/guide.html'));
-});
-
-// Add these new API endpoints after your existing endpoints
 
 // Prayer Times by City
 app.get('/api/prayer-times/:city/:country', async (req, res) => {
