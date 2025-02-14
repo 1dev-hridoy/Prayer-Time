@@ -6,28 +6,31 @@ const moment = require('moment-timezone');
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(express.static('public'));
+// Serve static files from public directory
+app.use(express.static('public', {
+    extensions: ['html'], // This will automatically serve .html files without the extension
+}));
 app.use('/assets', express.static('assets'));
 
-function convertToBengaliNumerals(time) {
-    const [inputHours, inputMinutes] = time.split(':').map(Number);
-    
-    const bdTime = moment().tz('Asia/Dhaka')
-        .hours(inputHours)
-        .minutes(inputMinutes);
-    
-    let hours = bdTime.format('h');
-    const minutes = bdTime.format('mm');
-    const period = bdTime.format('A');
-    
-    const periodInBengali = period === 'AM' ? 'এএম' : 'পিএম';
-    
-    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
-    const bengaliTime = `${hours.split('').map(d => bengaliNumerals[d]).join('')}:${minutes.split('').map(d => bengaliNumerals[d]).join('')} ${periodInBengali}`;
-    
-    return bengaliTime;
-}
+// Redirect /pagename.html to /pagename
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html')) {
+        const withoutHtml = req.path.slice(0, -5); // Remove .html
+        return res.redirect(301, withoutHtml);
+    }
+    next();
+});
 
+// Route handlers
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/index.html'));
+});
+
+app.get('/surah', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/surah.html'));
+});
+
+// API endpoints
 app.get('/api/prayer-times', async (req, res) => {
     try {
         let city = 'Dhaka';
@@ -84,7 +87,6 @@ app.get('/api/prayer-times', async (req, res) => {
     }
 });
 
-// Quran Chapters API
 app.get('/api/chapters', async (req, res) => {
     try {
         const response = await fetch('https://api.quran.com/api/v4/chapters');
@@ -102,7 +104,6 @@ app.get('/api/chapters', async (req, res) => {
     }
 });
 
-// Chapter Info API
 app.get('/api/chapters/:id/info', async (req, res) => {
     try {
         const { id } = req.params;
@@ -121,8 +122,9 @@ app.get('/api/chapters/:id/info', async (req, res) => {
     }
 });
 
-app.get('/surah', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/surah.html'));
+// Handle 404 errors
+app.use((req, res) => {
+    res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
 });
 
 app.listen(port, () => {
@@ -135,3 +137,22 @@ app.listen(port, () => {
         console.error('Server error:', err);
     }
 });
+
+function convertToBengaliNumerals(time) {
+    const [inputHours, inputMinutes] = time.split(':').map(Number);
+    
+    const bdTime = moment().tz('Asia/Dhaka')
+        .hours(inputHours)
+        .minutes(inputMinutes);
+    
+    let hours = bdTime.format('h');
+    const minutes = bdTime.format('mm');
+    const period = bdTime.format('A');
+    
+    const periodInBengali = period === 'AM' ? 'এএম' : 'পিএম';
+    
+    const bengaliNumerals = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+    const bengaliTime = `${hours.split('').map(d => bengaliNumerals[d]).join('')}:${minutes.split('').map(d => bengaliNumerals[d]).join('')} ${periodInBengali}`;
+    
+    return bengaliTime;
+}
