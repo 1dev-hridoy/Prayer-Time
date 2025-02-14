@@ -6,36 +6,34 @@ const moment = require('moment-timezone');
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Middleware to handle both clean URLs and .html extensions
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html')) {
+        const withoutHtml = req.path.slice(0, -5);
+        return res.redirect(301, withoutHtml);
+    }
+    next();
+});
+
+// Define routes
+const routes = {
+    '/': 'index.html',
+    '/surah': 'surah.html',
+    '/resources': 'resources.html',
+    '/guide': 'guide.html',
+    '/tasbeeh': 'tasbeeh.html'
+};
+
+// Handle all defined routes
+Object.entries(routes).forEach(([route, file]) => {
+    app.get(route, (req, res) => {
+        res.sendFile(path.join(__dirname, 'public', file));
+    });
+});
+
 // Serve static files from public directory
 app.use(express.static('public'));
 app.use('/assets', express.static('assets'));
-
-// Define routes before static file handling
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/index.html'));
-});
-
-app.get('/surah', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/surah.html'));
-});
-
-app.get('/resources', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/resources.html'));
-});
-
-app.get('/guide', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/guide.html'));
-});
-
-app.get('/tasbeeh', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public/tasbeeh.html'));
-});
-
-// Redirect .html URLs to clean URLs
-app.get('/*.html', (req, res) => {
-    const withoutHtml = req.path.slice(0, -5); // Remove .html
-    res.redirect(301, withoutHtml);
-});
 
 // API endpoints
 app.get('/api/prayer-times', async (req, res) => {
@@ -266,7 +264,7 @@ app.get('/api/hijri-calendar/:year/:month', async (req, res) => {
     }
 });
 
-// Handle 404 errors
+// Handle 404 errors - This should be the last route
 app.use((req, res) => {
     res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
 });
