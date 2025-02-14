@@ -132,6 +132,11 @@ app.get('/resources', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/resources.html'));
 });
 
+// Add this route with your other routes
+app.get('/guide', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/guide.html'));
+});
+
 // Add these new API endpoints after your existing endpoints
 
 // Prayer Times by City
