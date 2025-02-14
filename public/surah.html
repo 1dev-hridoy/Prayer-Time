@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সূরা সমূহ - কুরআন অ্যাপ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            font-family: 'Hind Siliguri', sans-serif;
+            font-weight: 300;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            background: #FFF;
+            border-radius: 50%;
+            display: inline-block;
+            position: relative;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        .loader::after {
+            content: '';  
+            box-sizing: border-box;
+            position: absolute;
+            left: 6px;
+            top: 10px;
+            width: 12px;
+            height: 12px;
+            color: #FF3D00;
+            background: currentColor;
+            border-radius: 50%;
+            box-shadow: 25px 2px, 10px 22px;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .surah-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .surah-card {
+            background: white;
+            transition: transform 0.3s ease;
+        }
+
+        .surah-card:hover {
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-container hidden">
+        <span class="loader"></span>
+    </div>
+
+    <!-- Surah Info Modal -->
+    <div id="surahModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] overflow-y-auto py-8">
+        <div class="bg-white rounded-lg p-6 max-w-3xl mx-4 w-full">
+            <div class="flex justify-between items-start mb-4">
+                <h3 id="modalTitle" class="text-2xl font-medium"></h3>
+                <button onclick="closeModal()" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div id="modalContent" class="prose max-w-none"></div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="flex justify-between items-center px-4 py-3 bg-white border-b sticky top-0 z-50 h-[60px]">
+            <div class="flex items-center space-x-4">
+                <a href="/" class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-xl">সূরা সমূহ</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button class="p-2 hover:bg-gray-100 rounded-lg">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container mx-auto px-4 py-6">
+            <div id="surahList" class="surah-grid">
+                <!-- Surah cards will be inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let page = 1;
+        const itemsPerPage = 20;
+        let loading = false;
+        let allSurahs = [];
+
+        async function loadSurahs() {
+            try {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                const response = await fetch('/api/chapters');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch chapters');
+                }
+                const data = await response.json();
+                allSurahs = data.chapters;
+                displaySurahs();
+            } catch (error) {
+                console.error('Error loading surahs:', error);
+                showError('সূরা লোড করতে সমস্যা হচ্ছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        function displaySurahs() {
+            const surahList = document.getElementById('surahList');
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+            const surahs = allSurahs.slice(start, end);
+
+            surahs.forEach(surah => {
+                const card = document.createElement('div');
+                card.className = 'surah-card rounded-lg p-6 shadow-sm cursor-pointer';
+                card.onclick = () => showSurahInfo(surah.id);
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full text-sm">${surah.id}</span>
+                            <div>
+                                <h3 class="font-medium">${surah.name_arabic}</h3>
+                                <p class="text-sm text-gray-600">${surah.name_simple}</p>
+                            </div>
+                        </div>
+                        <span class="text-sm text-gray-500">${surah.verses_count} আয়াত</span>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p>${surah.translated_name.name}</p>
+                        <p class="mt-2">${surah.revelation_place === 'makkah' ? 'মাক্কী' : 'মাদানী'}</p>
+                    </div>
+                `;
+                surahList.appendChild(card);
+            });
+        }
+
+        async function showSurahInfo(id) {
+            try {
+                document.getElementById('loadingOverlay').classList.remove('hidden');
+                const response = await fetch(`/api/chapters/${id}/info`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch chapter info');
+                }
+                const data = await response.json();
+                
+                const surah = allSurahs.find(s => s.id === id);
+                document.getElementById('modalTitle').textContent = `${surah.name_simple} (${surah.name_arabic})`;
+                document.getElementById('modalContent').innerHTML = data.chapter_info.text;
+                document.getElementById('surahModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading surah info:', error);
+                showError('সূরার তথ্য লোড করতে সমস্যা হচ্ছে। অনুগ্রহ করে আবার চেষ্টা করুন।');
+            } finally {
+                document.getElementById('loadingOverlay').classList.add('hidden');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('surahModal').classList.add('hidden');
+        }
+
+        // Infinite scroll
+        window.addEventListener('scroll', () => {
+            if (loading) return;
+            
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 100) {
+                if ((page * itemsPerPage) < allSurahs.length) {
+                    loading = true;
+                    page++;
+                    displaySurahs();
+                    loading = false;
+                }
+            }
+        });
+
+        // Close modal when clicking outside
+        document.getElementById('surahModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('surahModal')) {
+                closeModal();
+            }
+        });
+
+        // Load initial data
+        document.addEventListener('DOMContentLoaded', loadSurahs);
+    </script>
+</body>
+</html> 

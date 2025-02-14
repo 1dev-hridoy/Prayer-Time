@@ -84,6 +84,47 @@ app.get('/api/prayer-times', async (req, res) => {
     }
 });
 
+// Quran Chapters API
+app.get('/api/chapters', async (req, res) => {
+    try {
+        const response = await fetch('https://api.quran.com/api/v4/chapters');
+        if (!response.ok) {
+            throw new Error('Failed to fetch chapters');
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch chapters',
+            message: error.message
+        });
+    }
+});
+
+// Chapter Info API
+app.get('/api/chapters/:id/info', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const response = await fetch(`https://api.quran.com/api/v4/chapters/${id}/info`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch chapter info');
+        }
+        const data = await response.json();
+        res.json(data);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            error: 'Failed to fetch chapter info',
+            message: error.message
+        });
+    }
+});
+
+app.get('/surah', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/surah.html'));
+});
+
 app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);
 }).on('error', (err) => {
